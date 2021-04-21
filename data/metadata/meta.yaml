@@ -1,0 +1,87 @@
+Freq:
+  tags:
+    name: Freq
+    unit: Hz
+  annotations: {}
+PhA_Vmag:
+  tags:
+    name: PhA_Vmag
+    unit: volts
+  annotations:
+    phase: A
+PhA_Vang:
+  tags:
+    name: PhA_Vang
+    unit: degrees
+  annotations:
+    phase: A
+PhB_Vmag:
+  tags:
+    name: PhB_Vmag
+    unit: volts
+  annotations:
+    phase: B
+PhB_Vang:
+  tags:
+    name: PhB_Vang
+    unit: degrees
+  annotations:
+    phase: B
+PhC_Vmag:
+  tags:
+    name: PhC_Vmag
+    unit: volts
+  annotations:
+    phase: C
+PhC_Vang:
+  tags:
+    name: PhC_Vang
+    unit: degrees
+  annotations:
+    phase: C
+PhA_Cmag:
+  tags:
+    name: PhA_Cmag
+    unit: amps
+  annotations:
+    phase: A
+PhA_Cang:
+  tags:
+    name: PhA_Cang
+    unit: degrees
+  annotations:
+    phase: A
+PhB_Cmag:
+  tags:
+    name: PhB_Cmag
+    unit: amps
+  annotations:
+    phase: B
+PhB_Cang:
+  tags:
+    name: PhB_Cang
+    unit: degrees
+  annotations:
+    phase: B
+PhC_Cmag:
+  tags:
+    name: PhC_Cmag
+    unit: amps
+  annotations:
+    phase: C
+PhC_Cang:
+  tags:
+    name: PhC_Cang
+    unit: degrees
+  annotations:
+    phase: C
+P:
+  tags:
+    name: P
+    unit: MW
+  annotations: {}
+Q:
+  tags:
+    name: Q
+    unit: MVAR
+  annotations: {}
