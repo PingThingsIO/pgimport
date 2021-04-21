@@ -12,4 +12,11 @@ if os.path.isfile(requirements):
             if line and not line.startswith("#")
         ]
 # Sets up and installs package, installs requirements
-setup(name="pgimport", packages=find_packages(), install_requires=install_requires)
+setup(
+    name="pgimport", 
+    packages=find_packages(), 
+    install_requires=install_requires,
+    version = "0.1.0",
+    description="contains code to import small datasets into PingThings' PredictiveGrid",
+    author="PingThingsIO"
+)

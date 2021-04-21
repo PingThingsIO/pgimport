@@ -7,7 +7,7 @@ import re
 import csv
 import json
 import yaml
-import s3fs     # allows pd.read() to work with s3 uris
+import s3fs     # allows pandas.read_csv() to work with s3 uris
 import boto3
 import pandas as pd
 from pathlib import Path
@@ -18,10 +18,7 @@ from pgimport.parse import DataParser, Stream, File, Metadata
 ## Module Variables and Constants
 ##########################################################################
 
-# NOTE: Matching metadata to streams is, in my experience, one of the most 
-# challenging parts of any ingestion. It would be nice to be able to offer 
-# users the option to provide metadata schemas via yaml or json files, but 
-# we would need to document how this could/should be done
+# NOTE: metadata can also be provided via a json or yaml file
 METADATA = {
     "Freq": {"tags": {"name": "Freq", "unit": "Hz"},
             "annotations": {}},
@@ -60,6 +57,17 @@ METADATA = {
 ##########################################################################
 
 def parse_metadata(meta_file):
+    """
+    Parameters
+    ----------
+    meta_file: str
+        specifies path to metadata file
+    
+    Returns
+    -------
+    dict:
+        metadata dict result of yaml/json loading
+    """
     if meta_file.endswith(".json"):
         try:
             return json.load(open(meta_file))
@@ -75,12 +83,26 @@ def parse_metadata(meta_file):
 # NOTE: This is an example of a UDF that is meant to take in any parameters it needs to
 # to parse a metadata dict/file and return a Metadata object for each Stream. Any function
 # that returns a Metadata object will suffice
-def get_metadata(metadata, fname, col, collection):
+def get_metadata(metadata, stream_name, collection):
+    """
+    Parameters
+    ----------
+    metadata: dict or str
+        either a dict of metadata or a str filename referring to a yaml/json metadata file
+    stream_name: str
+        name of stream. Used as a key to look up metadata
+    collection: str
+        specifies the collection that the stream belongs to
+    
+    Returns
+    -------
+    pgimport.parse.Metadata object
+    """
     # parse metadata into dict if it isn't already
     meta = metadata if isinstance(metadata, dict) else parse_metadata(metadata)
     
-    tags = meta[col].get("tags", None)
-    annotations = meta[col].get("annotations", None)
+    tags = meta[stream_name].get("tags", None)
+    annotations = meta[stream_name].get("annotations", None)
     return Metadata(collection, tags, annotations)
 
 ##########################################################################
@@ -158,12 +180,12 @@ class CSVParser(DataParser):
             streams = []
             df = pd.read_csv(file.path)
             count = len(df)
-            # relies on timestamps being in the first column
+            # TODO: relies on timestamps being in the first column
             # probs should add some checking to verify
             times = df.iloc[:,0]
             collection = self._parse_collection(file.path)
 
             yield [
-                Stream(times, df[col], self.meta_func(self.meta, file, col, collection), count)
+                Stream(times, df[col], self.meta_func(self.meta, col, collection), count)
                 for col in df.columns[1:]
             ]
