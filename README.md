@@ -7,13 +7,13 @@ A python based tool for importing data into PingThings' PredictiveGrid platform.
 `pgimport` is not currently hosted on a package management server, so you will need to install it directly from GitHub (or install from a local copy). To have pip download the codebase and install, you can run the following provided that you have GitHub configured with an SSH key pair:
 
 ```
-pip install git+ssh://git@github.com/PingThingsIO/pgimport
+pip install git+ssh://git@github.com/PingThingsIO/pgimport@chestnut_dev
 ```
 
 else via:
 
 ```
-pip install git+https://github.com/PingThingsIO/pgimport
+pip install git+https://github.com/PingThingsIO/pgimport@chestnut_dev
 ```
 
 ## Concept Overview
