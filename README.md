@@ -22,6 +22,7 @@ pip install git+https://github.com/PingThingsIO/pgimport@chestnut_dev
 
 Due to the unique nature of most data ingestions with regard to data location, layout and file format, it is expected that users will need to create custom data parsers by implementing the `DataParser` interface. The `DataParser` interface needs to implement two methods: `collect_files()` and `create_streams()`. These methods work together to locate and process raw data files and turn them into `Stream` objects that can be handled by the `DataIngestor`.
 
+![](images/flow.png)
 
 ## Basic Usage
 
