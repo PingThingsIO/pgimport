@@ -61,6 +61,9 @@ class DataIngestor(object):
         for i in range(0, len(points), chunk_size):
             yield points[i:i + chunk_size]
     
+    def _ingest(self, stream, points):
+        stream.insert(points, self.merge_policy)
+    
     # NOTE: Ideally this function would listen to a queue and would pick up Stream
     # objects from the DataParser and insert as they are produced
     def ingest(self, streams, chunk_size=None):
@@ -85,11 +88,11 @@ class DataIngestor(object):
             elif num_streams == 0:
                 stream = self.conn.create(uuid.uuid4(), meta.collection, meta.tags, meta.annotations)
             else:
-                stream = self.conn.stream_from_uuid(streams[0].uuid)
+                stream = streams[0]
             
             # convert time and value arrays into list of tuples and split into chunks for insertion
             chunk_size = chunk_size or INSERT_CHUNK_SIZE
             for points in self._chunk_points(s.times, s.values, chunk_size):
-                stream.insert(points, self.merge_policy)
+                self._ingest(stream, points)
                 if self.pbar:
                     self.pbar.update(len(points))

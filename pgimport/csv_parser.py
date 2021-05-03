@@ -158,8 +158,7 @@ class CSVParser(DataParser):
         match = re.search(self.regex, fname)
         if match:
             return "/".join([self.collection_prefix, match.group(0)]) if self.collection_prefix else match.group(0)
-        else:
-            raise Exception(f"could not determine collection to use for file {fname}")
+        raise Exception(f"could not determine collection to use for file {fname}")
     
     def create_streams(self, files):
         """

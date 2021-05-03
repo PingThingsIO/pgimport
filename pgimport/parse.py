@@ -39,10 +39,10 @@ class Metadata(object):
             specifies annotations for a stream. Can contain any key/values or be empty
         """
         self.collection = collection
+        if not isinstance(tags, dict) or (annotations and not isinstance(annotations, dict)):
+            raise TypeError("tags and annotations must be provided as dicts")
         # it's okay for a stream to have empty annotations
         self.annotations = annotations or {}
-        if not isinstance(tags, dict) or not isinstance(annotations, dict):
-            raise TypeError("tags and annotations must be provided as dicts")
         self.tags = tags
 
 class File(object):
