@@ -23,17 +23,16 @@ MERGE_POLICIES = ["never", "retain", "replace", "equal"]
 ##########################################################################
 
 class DataIngestor(object):
-
+    """
+    Parameters
+    ----------
+    conn: btrdb.Connection
+    merge_policy: str
+        merge policy to use when inserting BTrDB points
+    total_points: int
+        specifies total number of points to be inserted. Used to create a progess bar.
+    """
     def __init__(self, conn, merge_policy="never", total_points=None):
-        """
-        Parameters
-        ----------
-        conn: btrdb.Connection
-        merge_policy: str
-            merge policy to use when inserting BTrDB points
-        total_points: int
-            specifies total number of points to be inserted. Used to create a progess bar.
-        """
         self.conn = conn
 
         if total_points is None:
@@ -45,7 +44,7 @@ class DataIngestor(object):
         if merge_policy in MERGE_POLICIES:
             self.merge_policy = merge_policy
         else:
-            raise Exception(f"'{merge_policy}' is not a valid merge policy. Options are: {','.join(MERGE_POLICIES)}")
+            raise Exception(f"'{merge_policy}' is not a valid merge policy. Options are: {', '.join(MERGE_POLICIES)}")
     
     @staticmethod
     def _chunk_points(times, values, chunk_size):
@@ -61,7 +60,14 @@ class DataIngestor(object):
         for i in range(0, len(points), chunk_size):
             yield points[i:i + chunk_size]
     
+    # NOTE: I moved this into a separate func to make it easier to test
     def _ingest(self, stream, points):
+        """
+        Parameters
+        ----------
+        stream: btrdb Stream
+        points: list of (time, value) tuples
+        """
         stream.insert(points, self.merge_policy)
     
     # NOTE: Ideally this function would listen to a queue and would pick up Stream

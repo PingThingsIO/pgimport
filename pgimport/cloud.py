@@ -16,10 +16,17 @@ class S3File(File):
 ## Cloud Provider Mixins
 ##########################################################################
 
-# NOTE: CloudMixin is an interface that implements only one method, connect(), 
-# which is meant to return a connection to a cloud provider that will allow 
-# subclasses to issue commands to the provider to locate and parse files
 class CloudMixin(metaclass=abc.ABCMeta):
+    """
+    CloudMixin is an interface that implements only one method, connect(), 
+    which is meant to return a connection to a cloud provider that will allow 
+    subclasses to issue commands to the provider to locate and parse files
+
+    Parameters
+    ----------
+    kwargs: dict
+        key/value pairs specifying credentials for cloud provider
+    """
     def __init__(self, **kwargs):
         self.params = {k.lower():v for k,v in kwargs.items()}
 
@@ -31,6 +38,14 @@ class CloudMixin(metaclass=abc.ABCMeta):
         raise NotImplementedError
     
 class S3Mixin(CloudMixin):
+    """
+    Provides connection to s3.
+
+    Parameters
+    ----------
+    kwargs: dict
+        key/value pairs specifying credentials for s3
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     
@@ -43,9 +58,9 @@ class S3Mixin(CloudMixin):
         client: botocore.client.S3
             s3 connection
         """
-        key = self.params.pop("aws_access_key_id", None) or os.environ.get("AWS_ACCESS_KEY_ID", None)
-        secret = self.params.pop("aws_secret_access_key", None) or os.environ.get("AWS_SECRET_ACCESS_KEY", None)
-        token = self.params.pop("aws_session_token", None) or os.environ.get("AWS_SESSION_TOKEN", None)
+        key = self.params.pop("aws_access_key_id", None) or os.environ.get("AWS_ACCESS_KEY_ID")
+        secret = self.params.pop("aws_secret_access_key", None) or os.environ.get("AWS_SECRET_ACCESS_KEY")
+        token = self.params.pop("aws_session_token", None) or os.environ.get("AWS_SESSION_TOKEN")
 
         # used to check validity of credentials, since boto3 doesn't automatically
         sts = boto3.client("sts")
@@ -63,6 +78,13 @@ class S3Mixin(CloudMixin):
     def list_objects(self, bucket, prefix):
         """
         Retrieves urls for all objects in provided bucket and subdirectory (aka prefix)
+
+        Parameters
+        ----------
+        bucket: str
+            s3 bucket that contains data files
+        prefix: str
+            (optional) subdirectory within s3 bucket that contains data files
 
         Returns
         -------

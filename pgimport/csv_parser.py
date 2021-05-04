@@ -110,23 +110,21 @@ def get_metadata(metadata, stream_name, collection):
 ##########################################################################
 
 class CSVParser(DataParser):
+    """
+    Parameters
+    ----------
+    fpath: str 
+        path to directory containing data
+    collection_prefix: str
+        prefix to add to all streams' collection names
+    regex: str
+        regex string to use to get collection from file name
+    metadata: dict/str:
+        either a dict of metadata or a str filename referring to a yaml/json metadata file
+    meta_func: func
+        callback function to use to map metadata to Stream objects
+    """
     def __init__(self, fpath=None, collection_prefix=None, regex=None, metadata=None, meta_func=None):
-        """
-        Parameters
-        ----------
-        fpath: str 
-            path to directory containing data
-        collection_prefix: str
-            prefix to add to all streams' collection names
-        regex: str
-            regex string to use to get collection from file name
-        metadata: dict/str:
-            either a dict of metadata or a str filename referring to a yaml/json metadata file
-        meta_func: func
-            callback function to use to map metadata to Stream objects
-        """
-        # TODO: allow user to specify local path or s3 bucket 
-        # somehow detect if meant to be using s3 and connect if so
         self.path = fpath
         self.collection_prefix = collection_prefix
         self.regex = regex if regex else "PMU[\d]*"

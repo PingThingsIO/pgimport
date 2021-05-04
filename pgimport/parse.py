@@ -9,35 +9,35 @@ import abc
 ##########################################################################
 
 class Stream(object):
+    """
+    Parameters
+    ----------
+    times: pandas.Series
+        contains timestamps, which can be datetime, datetime64, float, str (RFC 2822)
+    values: pandas.Series
+        contains float values
+    metadata: Metadata
+        Metadata object that contains a stream's collection, tags, annotations
+    count: int
+        total number of points in stream
+    """
     def __init__(self, times, values, metadata, count):
-        """
-        Parameters
-        ----------
-        times: pandas.Series
-            contains timestamps, which can be datetime, datetime64, float, str (RFC 2822)
-        values: pandas.Series
-            contains float values
-        metadata: Metadata
-            Metadata object that contains a stream's collection, tags, annotations
-        count: int
-            total number of points in stream
-        """
         self.times = times
         self.values = values
         self.metadata = metadata
         self.count = count
 
 class Metadata(object):
+    """
+    Parameters
+    ----------
+    collection: str
+    tags: dict
+        specifies tags for a stream. Can only contain (name, unit, ingress, distiller)
+    annotations: dict
+        specifies annotations for a stream. Can contain any key/values or be empty
+    """
     def __init__(self, collection, tags, annotations=None):
-        """
-        Parameters
-        ----------
-        collection: str
-        tags: dict
-            specifies tags for a stream. Can only contain (name, unit, ingress, distiller)
-        annotations: dict
-            specifies annotations for a stream. Can contain any key/values or be empty
-        """
         self.collection = collection
         if not isinstance(tags, dict) or (annotations and not isinstance(annotations, dict)):
             raise TypeError("tags and annotations must be provided as dicts")
@@ -46,13 +46,13 @@ class Metadata(object):
         self.tags = tags
 
 class File(object):
+    """
+    Parameters
+    ----------
+    path: str
+        specifies path to file (either local path or s3 uri)
+    """
     def __init__(self, path):
-        """
-        Parameters
-        ----------
-        path: str
-            specifies path to file (either local path or s3 uri)
-        """
         self.path = path
 
 ##########################################################################
