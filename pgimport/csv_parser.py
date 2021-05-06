@@ -12,7 +12,7 @@ import boto3
 import pandas as pd
 from pathlib import Path
 
-from pgimport.parse import DataParser, Stream, File, Metadata
+from pgimport.parse import DataParser, StreamData, File, Metadata
 
 ##########################################################################
 ## Module Variables and Constants
@@ -81,7 +81,7 @@ def parse_metadata(meta_file):
     raise Exception("Could not parse provided metadata. Valid metadata formats are (dict, json, yaml)")
 
 # NOTE: This is an example of a UDF that is meant to take in any parameters it needs to
-# to parse a metadata dict/file and return a Metadata object for each Stream. Any function
+# to parse a metadata dict/file and return a Metadata object for each StreamData object. Any function
 # that returns a Metadata object will suffice
 def get_metadata(metadata, stream_name, collection):
     """
@@ -109,7 +109,7 @@ def get_metadata(metadata, stream_name, collection):
 ## CSV Parser
 ##########################################################################
 
-class CSVParser(DataParser):
+class MyCSVParser(DataParser):
     """
     Parameters
     ----------
@@ -122,9 +122,9 @@ class CSVParser(DataParser):
     metadata: dict/str:
         either a dict of metadata or a str filename referring to a yaml/json metadata file
     meta_func: func
-        callback function to use to map metadata to Stream objects
+        callback function to use to map metadata to StreamData objects
     """
-    def __init__(self, fpath=None, collection_prefix=None, regex=None, metadata=None, meta_func=None):
+    def __init__(self, fpath, collection_prefix=None, regex=None, metadata=None, meta_func=None):
         self.path = fpath
         self.collection_prefix = collection_prefix
         self.regex = regex if regex else "PMU[\d]*"
@@ -158,7 +158,7 @@ class CSVParser(DataParser):
             return "/".join([self.collection_prefix, match.group(0)]) if self.collection_prefix else match.group(0)
         raise Exception(f"could not determine collection to use for file {fname}")
     
-    def create_streams(self, files):
+    def instantiate_streams(self, files):
         """
         Parameters
         ----------
@@ -167,14 +167,12 @@ class CSVParser(DataParser):
         
         Yields
         ------
-        streams: list
-            list of Stream objects, yielded as chunks per file
+        stream: StreamData
         """
         for file in files:
             if not isinstance(file, File):
                 raise TypeError(f"Expected File inputs. Received {type(file)}")
 
-            streams = []
             df = pd.read_csv(file.path)
             count = len(df)
             # TODO: relies on timestamps being in the first column
@@ -182,7 +180,5 @@ class CSVParser(DataParser):
             times = df.iloc[:,0]
             collection = self._parse_collection(file.path)
 
-            yield [
-                Stream(times, df[col], self.meta_func(self.meta, col, collection), count)
-                for col in df.columns[1:]
-            ]
+            for col in df.columns[1:]:
+                yield StreamData(times, df[col], self.meta_func(self.meta, col, collection), count)

@@ -7,7 +7,7 @@ import btrdb
 from btrdb.utils.timez import to_nanoseconds, ns_delta
 
 from pgimport.ingest import DataIngestor
-from pgimport.parse import Stream, Metadata
+from pgimport.parse import StreamData, Metadata
 
 NUM_SAMPLES = 4
 
@@ -28,7 +28,7 @@ def stream(scope="session", autouse=True):
     values = pd.Series([float(i) for i in range(NUM_SAMPLES)])
     tags = {"name": "foo", "unit": "bars"}
     meta =  Metadata("fake_collection", tags)
-    return Stream(times, values, meta, NUM_SAMPLES)
+    return StreamData(times, values, meta, NUM_SAMPLES)
 
 
 @pytest.mark.usefixtures('conn', 'stream')
@@ -38,6 +38,6 @@ class TestDataIngestor(object):
     def test_ingest(self, mock_ingest, conn, stream):
         data = [(t,v) for t,v in zip(stream.times, stream.values)]
         ingestor = DataIngestor(conn, merge_policy="retain", total_points=101)
-        ingestor.ingest([stream])
+        ingestor.ingest(stream)
         # just testing that test ingestion ran with expected params for now
         mock_ingest.assert_called_with(btrdbstream, data)

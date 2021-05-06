@@ -1,7 +1,6 @@
 import os
 import abc
 import boto3
-from botocore.exceptions import ClientError
 
 from pgimport.parse import File
 
@@ -62,18 +61,16 @@ class S3Mixin(CloudMixin):
         secret = self.params.pop("aws_secret_access_key", None) or os.environ.get("AWS_SECRET_ACCESS_KEY")
         token = self.params.pop("aws_session_token", None) or os.environ.get("AWS_SESSION_TOKEN")
 
-        # used to check validity of credentials, since boto3 doesn't automatically
-        sts = boto3.client("sts")
+        session = boto3.Session(
+            aws_access_key_id=key,  aws_secret_access_key=secret, aws_session_token=token
+        )
+        client = session.client("s3")
 
-        try:
-            session = boto3.Session(
-                aws_access_key_id=key,  aws_secret_access_key=secret, aws_session_token=token
-            )
-            client = session.client("s3") 
-            sts.get_caller_identity()
-            return client
-        except ClientError as e:
-            raise Exception(f"error connecting to s3: {e}")
+        # check validity of credentials. will throw a botocore.exceptions.ClientError
+        # if credentials are not valid
+        sts = boto3.client("sts")
+        sts.get_caller_identity()
+        return client
     
     def list_objects(self, bucket, prefix):
         """

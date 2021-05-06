@@ -5,10 +5,10 @@
 import abc
 
 ##########################################################################
-## Stream, Metadata and File objects
+## StreamData, Metadata and File objects
 ##########################################################################
 
-class Stream(object):
+class StreamData(object):
     """
     Parameters
     ----------
@@ -74,7 +74,7 @@ class DataParser(metaclass=abc.ABCMeta):
         raise NotImplementedError
     
     @abc.abstractmethod
-    def create_streams(self, files):
+    def instantiate_streams(self, files):
         """
         This method parses Files and should return or yield lists of Streams
 

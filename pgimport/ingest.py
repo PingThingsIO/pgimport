@@ -9,7 +9,7 @@ import warnings
 from tqdm import tqdm
 from btrdb.utils.timez import to_nanoseconds
 
-from pgimport.parse import Stream
+from pgimport.parse import StreamData
 
 ##########################################################################
 ## Module Variables and Constants
@@ -70,35 +70,31 @@ class DataIngestor(object):
         """
         stream.insert(points, self.merge_policy)
     
-    # NOTE: Ideally this function would listen to a queue and would pick up Stream
+    # NOTE: Ideally this function would listen to a queue and would pick up StreamData
     # objects from the DataParser and insert as they are produced
-    def ingest(self, streams, chunk_size=None):
+    def ingest(self, streamdata, chunk_size=None):
         """
         Parameters
         ----------
-        streams: list of Streams
+        streamdata: StreamData
         chunk_size: int
             specifies number of (time, value) pairs to insert at a time
         """
-        for s in streams:
-            if not isinstance(s, Stream):
-                raise TypeError(f"Stream object expected. Received {type(s)}")
+        if not isinstance(streamdata, StreamData):
+            raise TypeError(f"StreamData object expected. Received {type(streamdata)}")
 
-            # check if stream exists already, create it if it doesn't
-            meta = s.metadata
-            streams = self.conn.streams_in_collection(meta.collection, is_collection_prefix=False, tags=meta.tags)
-            
-            num_streams = len(streams)
-            if num_streams > 1:
-                raise Exception(f"{num_streams} streams found in collection {meta.collection} named {meta.tags['name']}. There should only be 1")
-            elif num_streams == 0:
-                stream = self.conn.create(uuid.uuid4(), meta.collection, meta.tags, meta.annotations)
-            else:
-                stream = streams[0]
-            
-            # convert time and value arrays into list of tuples and split into chunks for insertion
-            chunk_size = chunk_size or INSERT_CHUNK_SIZE
-            for points in self._chunk_points(s.times, s.values, chunk_size):
-                self._ingest(stream, points)
-                if self.pbar:
-                    self.pbar.update(len(points))
+        # check if stream exists already, create it if it doesn't
+        meta = streamdata.metadata
+        streams = self.conn.streams_in_collection(meta.collection, is_collection_prefix=False, tags=meta.tags)
+
+        if len(streams) == 0:
+            stream = self.conn.create(uuid.uuid4(), meta.collection, meta.tags, meta.annotations)
+        else:
+            stream = streams[0]
+        
+        # convert time and value arrays into list of tuples and split into chunks for insertion
+        chunk_size = chunk_size or INSERT_CHUNK_SIZE
+        for points in self._chunk_points(streamdata.times, streamdata.values, chunk_size):
+            self._ingest(stream, points)
+            if self.pbar:
+                self.pbar.update(len(points))
