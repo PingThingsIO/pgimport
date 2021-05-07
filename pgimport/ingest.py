@@ -19,6 +19,24 @@ INSERT_CHUNK_SIZE = 50000
 MERGE_POLICIES = ["never", "retain", "replace", "equal"]
 
 ##########################################################################
+## Warnings
+##########################################################################
+
+class NullValuesWarning(UserWarning):
+    """
+    Alerts users that null values were detected in data to be inserted
+    and data will be dropped, as BTrDB cannot accept null values
+    """
+    pass
+
+class ProgressBarWarning(UserWarning):
+    """
+    Alerts users that a progress bar will not be displayed because total
+    points was not provided
+    """
+    pass
+
+##########################################################################
 ## DataIngestor
 ##########################################################################
 
@@ -36,7 +54,7 @@ class DataIngestor(object):
         self.conn = conn
 
         if total_points is None:
-            warnings.warn("total points not provided. Progress bar will not be displayed")
+            warnings.warn("total points not provided. Progress bar will not be displayed", ProgressBarWarning)
             self.pbar = None
         else:
             self.pbar = tqdm(total=total_points)
@@ -47,15 +65,24 @@ class DataIngestor(object):
             raise Exception(f"'{merge_policy}' is not a valid merge policy. Options are: {', '.join(MERGE_POLICIES)}")
     
     @staticmethod
-    def _chunk_points(times, values, chunk_size):
+    def _chunk_points(stream, times, values, chunk_size):
         """
         Parameters
         ----------
+        stream: btrdb Stream
         times: pd.Series of timestamps, which can be datetime, datetime64, float, str (RFC 2822)
         values: pd.Series of float values
         chunk_size: int
             specifies number of (time, value) pairs to insert at a time
         """
+        # drop any null values
+        null_positions = values[values.isnull()].index.tolist()
+        if len(null_positions) > 0:
+            warnings.warn(f"""null values detected in stream {str(stream.uuid)}.
+                {len(null_positions)} points were dropped""", NullValuesWarning)
+        values.drop(null_positions, inplace=True)
+        times.drop(null_positions, inplace=True)
+
         points = [(to_nanoseconds(t), v) for t, v in zip(times, values)]
         for i in range(0, len(points), chunk_size):
             yield points[i:i + chunk_size]
@@ -94,7 +121,7 @@ class DataIngestor(object):
         
         # convert time and value arrays into list of tuples and split into chunks for insertion
         chunk_size = chunk_size or INSERT_CHUNK_SIZE
-        for points in self._chunk_points(streamdata.times, streamdata.values, chunk_size):
+        for points in self._chunk_points(stream, streamdata.times, streamdata.values, chunk_size):
             self._ingest(stream, points)
             if self.pbar:
                 self.pbar.update(len(points))
