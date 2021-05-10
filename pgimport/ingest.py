@@ -78,8 +78,10 @@ class DataIngestor(object):
         # drop any null values
         null_positions = values[values.isnull()].index.tolist()
         if len(null_positions) > 0:
-            warnings.warn(f"""null values detected in stream {str(stream.uuid)}.
-                {len(null_positions)} points were dropped""", NullValuesWarning)
+            warnings.warn(
+                f"""{len(null_positions)} null values were detected in source data
+                and will not be inserted into BTrDB stream {str(stream.uuid)}.""", NullValuesWarning
+            )
         values.drop(null_positions, inplace=True)
         times.drop(null_positions, inplace=True)
 
