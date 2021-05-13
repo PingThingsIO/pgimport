@@ -7,7 +7,7 @@ This directory contains sample data and is for tutorial purposes only.
 ------------
 
     ├── metadata               <- contains examples of user specified metadata files.
-        ├── meta.json
-        ├── meta.yaml
+        ├── example_metadata.json
+        ├── example_metadata.yaml
 
 ------------
