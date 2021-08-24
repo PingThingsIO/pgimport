@@ -116,17 +116,21 @@ class MyCSVParser(DataParser):
     fpath: str 
         path to directory containing data
     collection_prefix: str
-        prefix to add to all streams' collection names
+        (optional) prefix to add to all streams' collection names
+    collection_func: func
+        (optional) callback function to use to derive collection name from file name. If left as None
+        it is assumed that the collection name will be provided in the meta_func
     regex: str
-        regex string to use to get collection from file name
+        (optional) regex string to use to get collection from file name
     metadata: dict/str:
         either a dict of metadata or a str filename referring to a yaml/json metadata file
     meta_func: func
         callback function to use to map metadata to StreamData objects
     """
-    def __init__(self, fpath, collection_prefix=None, regex=None, metadata=None, meta_func=None):
+    def __init__(self, fpath, collection_prefix=None, collection_func=None, regex=None, metadata=None, meta_func=None):
         self.path = fpath
         self.collection_prefix = collection_prefix
+        self.collection_func = collection_func
         self.regex = regex if regex else "PMU[\d]*"
         self.meta = metadata if metadata else METADATA
         self.meta_func = meta_func if meta_func else get_metadata
@@ -178,7 +182,11 @@ class MyCSVParser(DataParser):
             # TODO: relies on timestamps being in the first column
             # probs should add some checking to verify
             times = df.iloc[:,0]
-            collection = self._parse_collection(file.path)
+
+            if self.collection_func:
+                collection = self.collection_func(file.path)
+            else:
+                collection = self.collection_prefix
 
             for col in df.columns[1:]:
                 yield StreamData(times, df[col], self.meta_func(self.meta, col, collection), count)
